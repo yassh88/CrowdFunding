@@ -2,15 +2,15 @@
 pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
-error CrowdFunding_AmountIsLessThenMinimumContribution();
-error CrowdFunding_OnlyManagerDoThis();
-error CrowdFunding_SenderIsNotAContributter();
-error CrowdFunding_SenderAlredyVotedToRequest();
-error CrowdFunding_RequestAlredyCompeted();
-error CrowdFunding_YouCantFinalizeRequest();
-error CrowdFunding_TransferFailed();
+// error CrowdFunding_AmountIsLessThenMinimumContribution();
+// error CrowdFunding_OnlyManagerDoThis();
+// error CrowdFunding_SenderIsNotAContributter();
+// error CrowdFunding_SenderAlredyVotedToRequest();
+// error CrowdFunding_RequestAlredyCompeted();
+// error CrowdFunding_YouCantFinalizeRequest();
+// error CrowdFunding_TransferFailed();
 
 contract CrowdFunding {
     struct Request {
@@ -29,10 +29,12 @@ contract CrowdFunding {
     Request[] private requests;
 
     event UserContribute(address indexed contributer, uint256 amount);
-
+    event requestIsCreated(uint256 indexed value, address recipient);
+    event requestApproved(address indexed approver);
+    event amountTransferedToRecipent(address indexed recipent);
     modifier restricted() {
         if (msg.sender != manager) {
-            revert CrowdFunding_OnlyManagerDoThis();
+            revert("CrowdFunding_OnlyManagerDoThis");
         }
         _;
     }
@@ -44,7 +46,8 @@ contract CrowdFunding {
 
     function contribute() public payable {
         if (msg.value < minmumContirbution) {
-            revert CrowdFunding_AmountIsLessThenMinimumContribution();
+            console.log("reverted");
+            revert("CrowdFunding_AmountIsLessThenMinimumContribution");
         }
         approver[msg.sender] = true;
         approverCounts++;
@@ -62,34 +65,36 @@ contract CrowdFunding {
         newRequest.recipent = _recipent;
         newRequest.completed = false;
         newRequest.approvalsCount = 0;
+        emit requestIsCreated(_value, _recipent);
     }
 
-    function approveRequest(uint _index, bool _vote) public {
+    function approveRequest(uint _index) public {
         if (!approver[msg.sender])
-            revert CrowdFunding_SenderIsNotAContributter();
+            revert("CrowdFunding_SenderIsNotAContributed");
         Request storage request = requests[_index];
-        if (!request.approvals[msg.sender])
-            revert CrowdFunding_SenderAlredyVotedToRequest();
-
+        console.log("request");
+        console.log(request.approvals[msg.sender]);
+        if (request.approvals[msg.sender])
+            revert("CrowdFunding_SenderAlredyVotedToRequest");
         request.approvals[msg.sender] = true;
-        if (_vote) {
-            request.approvalsCount = request.approvalsCount + 1;
-        }
+        request.approvalsCount = request.approvalsCount + 1;
+        console.log("doen");
+        emit requestApproved(msg.sender);
     }
 
     function finalizeRequest(uint _index) public restricted {
         Request storage request = requests[_index];
-        if (request.completed) revert CrowdFunding_RequestAlredyCompeted();
-        if (request.approvalsCount > (approverCounts / 2))
-            revert CrowdFunding_YouCantFinalizeRequest();
-        // request.recipent.transfer(request.value);
+        if (request.completed) revert("CrowdFunding_RequestAlreadyCompeted");
+        if (request.approvalsCount <= (approverCounts / 2))
+            revert("CrowdFunding_YouCantFinalizeRequest");
         (bool success, ) = payable(request.recipent).call{value: request.value}(
             ""
         );
         if (!success) {
-            revert CrowdFunding_TransferFailed();
+            revert("CrowdFunding_TransferFailed");
         }
         request.completed = true;
+        emit amountTransferedToRecipent(request.recipent);
     }
 
     function getManger() public view returns (address) {
@@ -101,6 +106,7 @@ contract CrowdFunding {
     }
 
     function getApproverCounts() public view returns (uint256) {
+        console.log("approverCounts", approverCounts);
         return approverCounts;
     }
 }
