@@ -59,12 +59,16 @@ contract CrowdFunding {
         uint _value,
         address _recipent
     ) public restricted {
+        console.log("its called");
         Request storage newRequest = requests.push();
         newRequest.discription = _discription;
         newRequest.value = _value;
         newRequest.recipent = _recipent;
         newRequest.completed = false;
         newRequest.approvalsCount = 0;
+        console.log("its value", _value);
+        console.log("its recipent", _recipent);
+
         emit requestIsCreated(_value, _recipent);
     }
 
@@ -108,5 +112,10 @@ contract CrowdFunding {
     function getApproverCounts() public view returns (uint256) {
         console.log("approverCounts", approverCounts);
         return approverCounts;
+    }
+
+    function getCountRequests() public view returns (uint256) {
+        console.log("approverCounts", approverCounts);
+        return requests.length;
     }
 }

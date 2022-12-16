@@ -27,7 +27,6 @@ module.exports = async ({ deployments, getNamedAccounts }) => {
     log("Verifying...");
     await verify(crowdFunding.address, arguments);
   }
-  log("---------------crowdFunding");
 };
 
 module.exports.tags = ["all", "crowdFunding"];

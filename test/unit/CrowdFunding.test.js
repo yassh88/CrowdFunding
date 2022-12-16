@@ -190,4 +190,12 @@ const { developmentChains } = require("../../helper-hardhat.config");
         console.log("approverCounts--", approverCounts);
         assert(approverCounts.toString() === "1");
       });
+      it("check is crowdFunding successfully", async () => {
+        const amount = await ethers.utils.parseEther(".02");
+        const recipient = accounts[3];
+        await crowdFunding.createRequest("test", amount, recipient.address);
+        const rCount = await crowdFunding.getCount();
+        console.log("rCount--", rCount);
+        assert(rCount.toString() === "1");
+      });
     });
